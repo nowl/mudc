@@ -10,58 +10,24 @@ void telnet_set_gtk_text_buffer(GtkTextBuffer *tb)
     text_buffer = tb;
 }
 
-static void
-rec_line_feed()
-{
-    gtk_text_buffer_insert_at_cursor(text_buffer, "\n", 1);
-}
 
 static void
-rec_car_ret()
+telnet_callback(int type, void *data)
 {
-    //gtk_text_buffer_insert_at_cursor(text_buffer, "\r", 1);
-}
-
-static void
-rec_bell()
-{
-}
-
-static void
-rec_backspace()
-{
-}
-
-static void
-rec_hor_tab()
-{
-}
-
-static void
-rec_vert_tab()
-{
-}
-
-static void
-rec_form_feed()
-{
-}
-
-static void
-rec_erase_line()
-{
-}
-
-static void
-rec_erase_char()
-{
-}
-
-static void
-rec_ascii(char c)
-{
-    char tmp[1] = {c};
-    gtk_text_buffer_insert_at_cursor(text_buffer, tmp, 1);
+    switch(type) {
+    case TC_LINE_FEED:
+        gtk_text_buffer_insert_at_cursor(text_buffer, "\n", 1);
+        break;
+    case TC_CARRIAGE_RETURN:
+        //gtk_text_buffer_insert_at_cursor(text_buffer, "\r", 1);
+        break;
+    case TC_ASCII: {
+        struct ascii_callback *ac_data = data;
+        char tmp[1] = {ac_data->c};
+        gtk_text_buffer_insert_at_cursor(text_buffer, tmp, 1);
+        break;
+    }
+    }
 }
 
 static void
@@ -74,25 +40,7 @@ rec_echo_command(int type)
 struct telnetp *
 telnet_connect(char *hostname, unsigned short port)
 {
-    struct telnetp_cbs cbs = {rec_ascii,
-                              NULL,
-                              rec_line_feed,
-                              rec_car_ret,
-                              rec_bell,
-                              rec_backspace,
-                              rec_hor_tab,
-                              rec_vert_tab,
-                              rec_form_feed,
-                              rec_erase_line,
-                              rec_erase_char,
-                              NULL,
-                              NULL,
-                              NULL,
-                              NULL,
-                              NULL,
-                              NULL};
-
-    struct telnetp *tn = telnetp_connect(hostname, port, cbs);
+    struct telnetp *tn = telnetp_connect(hostname, port, telnet_callback);
 
     if(!tn) return NULL;
 
