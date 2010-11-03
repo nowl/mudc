@@ -1,4 +1,5 @@
 #include <gtk/gtk.h>
+#include <gdk/gdkkeysyms.h>
 
 #include <string.h>
 #include <assert.h>
@@ -9,14 +10,22 @@
 #define MAIN_WINDOW_TITLE                "Mudc v. 0.1"
 #define UPDATE_INTERVAL_SECONDS          1
 
-static GtkTextView *text_view = NULL;
+static struct telnetp *telnet = NULL;
+static GtkWidget *text_view = NULL;
+static GtkTextBuffer *text_buffer = NULL;
+static GtkWidget *entry_view = NULL;
+static GtkTextBuffer *entry_buffer = NULL;
 
 static void close_dialog_response(GtkDialog *dialog,
                                   gint response_id,
                                   gpointer user_data)
 {
     if(response_id == GTK_RESPONSE_YES)
+    {
+        if(telnet)
+            telnet_close(telnet);
         gtk_main_quit();
+    }
 }
 
 static gboolean close_program(GtkWidget *widget,
@@ -60,6 +69,32 @@ static void view_signal(GtkTextBuffer *widget,
 //    gchar *text = gtk_text_buffer_get_text(widget, &iter1, &iter2, FALSE);
     //gtk_text_buffer_get_property("cursor-position"
 //    g_print("text buffer contains: %s\n", text);
+}
+
+static gboolean entry_keypress(GtkWidget   *widget,
+                               GdkEventKey *event,
+                               gpointer     user_data) 
+{
+    if(event->keyval == GDK_KEY_Return)
+    {
+        GtkTextIter start, end;
+        gtk_text_buffer_get_start_iter(entry_buffer, &start);
+        gtk_text_buffer_get_end_iter(entry_buffer, &end);
+
+        gchar *text = gtk_text_buffer_get_text(entry_buffer, &start, &end, FALSE);
+
+        /* clear the text */
+        gtk_text_buffer_delete(entry_buffer, &start, &end);
+
+        /* send the text */
+        telnet_send(telnet, text);
+
+        g_free(text);
+
+        return TRUE;
+    }
+
+    return FALSE;    
 }
 
 static void
@@ -122,18 +157,23 @@ main(int argc, char *argv[])
 {
     GtkWidget *main_window;
     GtkWidget *sizer_main;
-    GtkWidget *entry_textview;
-    GtkWidget *text_entry;
     GtkWidget *menu_bar;
 
     config_read();
 
-    //struct telnetp *tn = telnet_connect("oak", 23);
-    struct telnetp *tn = telnet_connect("aardmud.org", 4000);
+    //telnet = telnet_connect("oak", 23);
+    //telnet = telnet_connect("realmsofdespair.com", 4000);
+    telnet = telnet_connect("aardmud.org", 4000);
+
+    if(!telnet)
+    {
+        printf("problem connecting\n");
+        return 1;
+    }
 
     gtk_init(&argc, &argv);
     
-    g_timeout_add_seconds(UPDATE_INTERVAL_SECONDS, telnet_processing_callback, tn);
+    g_timeout_add_seconds(UPDATE_INTERVAL_SECONDS, telnet_processing_callback, telnet);
     
     /* set up main window */
     main_window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
@@ -180,14 +220,21 @@ main(int argc, char *argv[])
 
     /* set up text view */
     text_view = gtk_text_view_new();
-    telnet_set_gtk_text_buffer(gtk_text_view_get_buffer(GTK_TEXT_VIEW(text_view)));
+    text_buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(text_view));
+    telnet_set_gtk_text_buffer(text_buffer);
+    gtk_text_view_set_editable(GTK_TEXT_VIEW(text_view), FALSE);
 
     gtk_box_pack_start(GTK_BOX(sizer_main), text_view, TRUE, TRUE, 0);
     
     /* set up text entry */
-    text_entry = gtk_text_view_new();
+    entry_view = gtk_text_view_new();
+    entry_buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(entry_view));
+    
+    g_signal_connect(entry_view, "key-press-event",
+                     G_CALLBACK(entry_keypress),
+                     NULL);                     
 
-    gtk_box_pack_start(GTK_BOX(sizer_main), text_entry, FALSE, TRUE, 0);
+    gtk_box_pack_start(GTK_BOX(sizer_main), entry_view, FALSE, TRUE, 0);
 
     /* finalize window */
     gtk_container_add(GTK_CONTAINER(main_window), sizer_main);
@@ -198,6 +245,8 @@ main(int argc, char *argv[])
     char *font_name = config_get(CONFIG_FONT_NAME);
     if(font_name)
         font_set(font_name);
+
+    gtk_widget_grab_focus(entry_view);
 
     gtk_main();
     

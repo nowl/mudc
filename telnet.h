@@ -6,6 +6,7 @@
 #include "telnetp.h"
 
 struct telnetp *telnet_connect(char *hostname, unsigned short port);
+void telnet_send(struct telnetp *tn, char *text);
 void telnet_process(struct telnetp *tn);
 void telnet_close(struct telnetp *tn);
 

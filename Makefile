@@ -2,7 +2,7 @@ CC = gcc
 CCFLAGS = -Wall -g
 INCLUDES = $(shell pkg-config --cflags gtk+-2.0) -I../libtelnetp
 LDFLAGS = -L../libtelnetp
-LIBS = $(shell pkg-config --libs gtk+-2.0) -ltelnetp
+LIBS = $(shell pkg-config --libs gtk+-2.0) -ltelnetp -lz
 
 SRCS = \
 	base.c \

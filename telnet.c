@@ -94,6 +94,8 @@ telnet_connect(char *hostname, unsigned short port)
 
     struct telnetp *tn = telnetp_connect(hostname, port, cbs);
 
+    if(!tn) return NULL;
+
     telnetp_enable_option(tn, TO_ECHO, true, rec_echo_command);
     telnetp_enable_option(tn, TO_SUPRESS_GO_AHEAD, true, NULL);
     telnetp_enable_option(tn, TO_COMPRESS2, true, NULL);
@@ -112,4 +114,10 @@ void
 telnet_close(struct telnetp *tn)
 {
     telnetp_close(tn);
+}
+
+void
+telnet_send(struct telnetp *tn, char *text)
+{
+    telnetp_send_line(tn, text, strlen(text));
 }
