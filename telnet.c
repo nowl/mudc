@@ -27,6 +27,11 @@ telnet_callback(int type, void *data)
         gtk_text_buffer_insert_at_cursor(text_buffer, tmp, 1);
         break;
     }
+    case TC_ANSI_SGR: {
+        struct ansi_callback_1arg *ac_data = data;        
+        printf("got a graphics routine number %d\n", ac_data->arg);
+        break;
+    }
     }
 }
 
