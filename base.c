@@ -10,11 +10,12 @@
 #define MAIN_WINDOW_TITLE                "Mudc v. 0.1"
 #define UPDATE_INTERVAL_SECONDS          1
 
-static struct telnetp *telnet = NULL;
-static GtkWidget *text_view = NULL;
-static GtkTextBuffer *text_buffer = NULL;
-static GtkWidget *entry_view = NULL;
-static GtkTextBuffer *entry_buffer = NULL;
+static struct telnetp *telnet       = NULL;
+static GtkWidget      *text_view    = NULL;
+static GtkTextBuffer  *text_buffer  = NULL;
+static GtkWidget      *entry_view   = NULL;
+static GtkTextBuffer  *entry_buffer = NULL;
+static GtkAdjustment  *vert_adj     = NULL;
 
 static void close_dialog_response(GtkDialog *dialog,
                                   gint response_id,
@@ -147,7 +148,9 @@ menu_selection(GtkMenuItem *item,
 static gboolean
 telnet_processing_callback(gpointer data)
 {
-    telnet_process((struct telnetp *)data);
+    int res = telnet_process((struct telnetp *)data);
+    if(res)
+        gtk_adjustment_set_value(vert_adj, gtk_adjustment_get_upper(vert_adj));
 
     return TRUE;
 }
@@ -219,12 +222,23 @@ main(int argc, char *argv[])
     gtk_box_pack_start(GTK_BOX(sizer_main), menu_bar, FALSE, FALSE, 0);
 
     /* set up text view */
+    GtkWidget *text_view_scroll = gtk_scrolled_window_new(NULL, NULL);
+
+    g_object_set(text_view_scroll,
+                 "hscrollbar-policy",
+                 GTK_POLICY_AUTOMATIC,
+                 NULL);
+    
     text_view = gtk_text_view_new();
     text_buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(text_view));
     telnet_set_gtk_text_buffer(text_buffer);
+    vert_adj = gtk_scrolled_window_get_vadjustment(GTK_SCROLLED_WINDOW(text_view_scroll));
+    telnet_set_gtk_vert_adj(vert_adj);
     gtk_text_view_set_editable(GTK_TEXT_VIEW(text_view), FALSE);
 
-    gtk_box_pack_start(GTK_BOX(sizer_main), text_view, TRUE, TRUE, 0);
+    gtk_container_add(GTK_CONTAINER(text_view_scroll), text_view);
+
+    gtk_box_pack_start(GTK_BOX(sizer_main), text_view_scroll, TRUE, TRUE, 0);
     
     /* set up text entry */
     entry_view = gtk_text_view_new();

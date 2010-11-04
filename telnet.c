@@ -4,19 +4,34 @@
 #include "telnet.h"
 
 static GtkTextBuffer *text_buffer = NULL;
+static GtkAdjustment *vert_adj = NULL;
+
+static gboolean need_refresh = false;
+
+//static char *line_buffer = NULL;
+//static size_t line_buffer_c = 0;
+//static int line_buffer_i = 0;
 
 void telnet_set_gtk_text_buffer(GtkTextBuffer *tb)
 {
     text_buffer = tb;
 }
 
+void telnet_set_gtk_vert_adj(GtkAdjustment *adj)
+{
+    vert_adj = adj;
+}
 
 static void
 telnet_callback(int type, void *data)
 {
     switch(type) {
     case TC_LINE_FEED:
+        //gtk_text_buffer_insert_at_cursor(text_buffer, line_buffer, line_buffer_i);
+        //line_buffer_i = 0;
+
         gtk_text_buffer_insert_at_cursor(text_buffer, "\n", 1);
+        need_refresh = true;
         break;
     case TC_CARRIAGE_RETURN:
         //gtk_text_buffer_insert_at_cursor(text_buffer, "\r", 1);
@@ -25,6 +40,9 @@ telnet_callback(int type, void *data)
         struct ascii_callback *ac_data = data;
         char tmp[1] = {ac_data->c};
         gtk_text_buffer_insert_at_cursor(text_buffer, tmp, 1);
+        //if(line_buffer_c == line_buffer_i)
+        //    line_buffer = memory_grow_to_size(line_buffer, &line_buffer_c, line_buffer_i+1);
+        //line_buffer[line_buffer_i++] = ac_data->c;
         break;
     }
     case TC_ANSI_SGR: {
@@ -57,10 +75,17 @@ telnet_connect(char *hostname, unsigned short port)
     return tn;
 }
 
-void
+int
 telnet_process(struct telnetp *tn)
 {
+    need_refresh = false;
+
     telnetp_process_incoming(tn);
+
+    if(need_refresh)
+        return true;
+    
+    return false;
 }
 
 void
