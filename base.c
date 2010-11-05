@@ -16,6 +16,7 @@ static GtkTextBuffer  *text_buffer  = NULL;
 static GtkWidget      *entry_view   = NULL;
 static GtkTextBuffer  *entry_buffer = NULL;
 static GtkAdjustment  *vert_adj     = NULL;
+static GtkTextMark *text_mark = NULL;
 
 static void close_dialog_response(GtkDialog *dialog,
                                   gint response_id,
@@ -51,25 +52,6 @@ static gboolean close_program(GtkWidget *widget,
     close_dialog_response(NULL, GTK_RESPONSE_YES, NULL);
 
     return TRUE;
-}
-
-static void entry_textview_size_maintainer(GtkWidget *widget,
-                                           GtkRequisition *requisition,
-                                           gpointer user_data)
-{
-	GtkRequisition req = {1, 20};
-        gtk_widget_size_request(widget, &req);
-}
-
-static void view_signal(GtkTextBuffer *widget,
-                        gpointer data)
-{
-//    GtkTextIter iter1, iter2;
-    //gtk_text_buffer_get_start_iter(widget, &iter1);
-    //gtk_text_buffer_get_end_iter(widget, &iter2);
-//    gchar *text = gtk_text_buffer_get_text(widget, &iter1, &iter2, FALSE);
-    //gtk_text_buffer_get_property("cursor-position"
-//    g_print("text buffer contains: %s\n", text);
 }
 
 static gboolean entry_keypress(GtkWidget   *widget,
@@ -145,12 +127,53 @@ menu_selection(GtkMenuItem *item,
     }
 }              
 
+static int new_data = FALSE;
+
+static gboolean
+move_scrollbar_callback(gpointer data)
+{
+    gdouble bottom = gtk_adjustment_get_upper(vert_adj);
+    gdouble page_size = gtk_adjustment_get_page_size(vert_adj);
+    gdouble new = bottom - page_size;
+    printf("checking\n");
+    if(gtk_adjustment_get_value(vert_adj) != new) {
+        printf("refreshing\n");
+        gtk_adjustment_set_value(vert_adj, new);
+    }
+
+#if 0
+    if(new_data)
+    {
+        gdouble bottom = gtk_adjustment_get_upper(vert_adj);
+        gdouble page_size = gtk_adjustment_get_page_size(vert_adj);
+        gtk_adjustment_set_value(vert_adj, bottom-page_size);
+
+        /*
+        printf("lower: %f\nupper: %f\nvalue: %f\ns_inc: %f\np_inc: %f\np_size: %f\n",
+               vert_adj->lower,
+               vert_adj->upper,
+               vert_adj->value,
+               vert_adj->step_increment,
+               vert_adj->page_increment,
+               vert_adj->page_size);
+        */
+    }
+#endif
+
+    return TRUE;
+}
+
 static gboolean
 telnet_processing_callback(gpointer data)
 {
-    int res = telnet_process((struct telnetp *)data);
-    if(res)
-        gtk_adjustment_set_value(vert_adj, gtk_adjustment_get_upper(vert_adj));
+    new_data = telnet_process((struct telnetp *)data);
+    
+    if(new_data) {
+        GtkTextIter iter;
+        gtk_text_buffer_get_end_iter(text_buffer, &iter);
+        gtk_text_buffer_move_mark(text_buffer, text_mark, &iter);
+        gtk_text_view_scroll_mark_onscreen(GTK_TEXT_VIEW(text_view), text_mark);
+    }        
 
     return TRUE;
 }
@@ -176,7 +199,17 @@ main(int argc, char *argv[])
 
     gtk_init(&argc, &argv);
     
-    g_timeout_add_seconds(UPDATE_INTERVAL_SECONDS, telnet_processing_callback, telnet);
+    g_timeout_add_seconds_full(G_PRIORITY_DEFAULT, UPDATE_INTERVAL_SECONDS,
+                               telnet_processing_callback, telnet, NULL);
+
+/*
+    g_timeout_add_full(G_PRIORITY_DEFAULT, UPDATE_INTERVAL_SECONDS*1000/25,
+                       move_scrollbar_callback, NULL, NULL);
+*/
+    /*
+  g_timeout_add_seconds_full(G_PRIORITY_DEFAULT, UPDATE_INTERVAL_SECONDS,
+                             move_scrollbar_callback, NULL, NULL);
+    */
     
     /* set up main window */
     main_window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
@@ -235,6 +268,12 @@ main(int argc, char *argv[])
     vert_adj = gtk_scrolled_window_get_vadjustment(GTK_SCROLLED_WINDOW(text_view_scroll));
     telnet_set_gtk_vert_adj(vert_adj);
     gtk_text_view_set_editable(GTK_TEXT_VIEW(text_view), FALSE);
+    gtk_text_view_set_cursor_visible(GTK_TEXT_VIEW(text_view), FALSE);
+
+    text_mark = gtk_text_mark_new("end mark", FALSE);
+    GtkTextIter iter;
+    gtk_text_buffer_get_end_iter(text_buffer, &iter);
+    gtk_text_buffer_add_mark(text_buffer, text_mark, &iter);
 
     gtk_container_add(GTK_CONTAINER(text_view_scroll), text_view);
 
