@@ -127,46 +127,10 @@ menu_selection(GtkMenuItem *item,
     }
 }              
 
-static int new_data = FALSE;
-
-static gboolean
-move_scrollbar_callback(gpointer data)
-{
-    gdouble bottom = gtk_adjustment_get_upper(vert_adj);
-    gdouble page_size = gtk_adjustment_get_page_size(vert_adj);
-    gdouble new = bottom - page_size;
-    printf("checking\n");
-    if(gtk_adjustment_get_value(vert_adj) != new) {
-        printf("refreshing\n");
-        gtk_adjustment_set_value(vert_adj, new);
-    }
-
-#if 0
-    if(new_data)
-    {
-        gdouble bottom = gtk_adjustment_get_upper(vert_adj);
-        gdouble page_size = gtk_adjustment_get_page_size(vert_adj);
-        gtk_adjustment_set_value(vert_adj, bottom-page_size);
-
-        /*
-        printf("lower: %f\nupper: %f\nvalue: %f\ns_inc: %f\np_inc: %f\np_size: %f\n",
-               vert_adj->lower,
-               vert_adj->upper,
-               vert_adj->value,
-               vert_adj->step_increment,
-               vert_adj->page_increment,
-               vert_adj->page_size);
-        */
-    }
-#endif
-
-    return TRUE;
-}
-
 static gboolean
 telnet_processing_callback(gpointer data)
 {
-    new_data = telnet_process((struct telnetp *)data);
+    int new_data = telnet_process((struct telnetp *)data);
     
     if(new_data) {
         GtkTextIter iter;
@@ -201,15 +165,6 @@ main(int argc, char *argv[])
     
     g_timeout_add_seconds_full(G_PRIORITY_DEFAULT, UPDATE_INTERVAL_SECONDS,
                                telnet_processing_callback, telnet, NULL);
-
-/*
-    g_timeout_add_full(G_PRIORITY_DEFAULT, UPDATE_INTERVAL_SECONDS*1000/25,
-                       move_scrollbar_callback, NULL, NULL);
-*/
-    /*
-  g_timeout_add_seconds_full(G_PRIORITY_DEFAULT, UPDATE_INTERVAL_SECONDS,
-                             move_scrollbar_callback, NULL, NULL);
-    */
     
     /* set up main window */
     main_window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
@@ -298,6 +253,13 @@ main(int argc, char *argv[])
     char *font_name = config_get(CONFIG_FONT_NAME);
     if(font_name)
         font_set(font_name);
+
+    /* set colors */
+    GdkColor color;
+    gdk_color_parse("#7f7f7f", &color);
+    gtk_widget_modify_text(text_view, GTK_STATE_NORMAL, &color);
+    gdk_color_parse("#000", &color);
+    gtk_widget_modify_base(text_view, GTK_STATE_NORMAL, &color);
 
     gtk_widget_grab_focus(entry_view);
 

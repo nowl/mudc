@@ -7,7 +7,8 @@ LIBS = $(shell pkg-config --libs gtk+-2.0) -ltelnetp -lz
 SRCS = \
 	base.c \
 	telnet.c \
-	config.c
+	config.c \
+	p_codes.c
 
 OBJS = $(SRCS:.c=.o)
 
