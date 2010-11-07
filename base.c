@@ -9,6 +9,7 @@
 
 #define MAIN_WINDOW_TITLE                "Mudc v. 0.1"
 #define UPDATE_INTERVAL_SECONDS          1
+#define MAX_NUM_TEXT_BUFFER_LINES        5000
 
 static struct telnetp *telnet       = NULL;
 static GtkWidget      *text_view    = NULL;
@@ -137,6 +138,16 @@ telnet_processing_callback(gpointer data)
         gtk_text_buffer_get_end_iter(text_buffer, &iter);
         gtk_text_buffer_move_mark(text_buffer, text_mark, &iter);
         gtk_text_view_scroll_mark_onscreen(GTK_TEXT_VIEW(text_view), text_mark);
+
+        /* clear old lines if we've hit the max number of lines */
+        int num_lines = gtk_text_buffer_get_line_count(text_buffer);
+        if(num_lines > MAX_NUM_TEXT_BUFFER_LINES)
+        {
+            GtkTextIter start, end;
+            gtk_text_buffer_get_start_iter(text_buffer, &start);
+            gtk_text_buffer_get_iter_at_line(text_buffer, &end, num_lines - MAX_NUM_TEXT_BUFFER_LINES);
+            gtk_text_buffer_delete(text_buffer, &start, &end);
+        }
     }        
 
     return TRUE;
