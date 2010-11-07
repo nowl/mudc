@@ -80,6 +80,22 @@ void telnet_set_gtk_vert_adj(GtkAdjustment *adj)
     vert_adj = adj;
 }
 
+static void dump_buffer()
+{
+    sgr_in_color = FALSE;
+    buffering_chars = FALSE;
+    
+    GtkTextIter end;
+    gtk_text_buffer_get_end_iter(text_buffer, &end);
+                
+    gtk_text_buffer_insert_with_tags_by_name(text_buffer,
+                                             &end,
+                                             line_buffer,
+                                             line_buffer_i,
+                                             sgr_tag_name,
+                                             NULL);
+}
+
 static void
 telnet_callback(int type, void *data)
 {
@@ -122,20 +138,7 @@ telnet_callback(int type, void *data)
         {
         case ASGR_RESET:
             if(sgr_in_color) 
-            {
-                sgr_in_color = FALSE;
-                buffering_chars = FALSE;
-                
-                GtkTextIter end;
-                gtk_text_buffer_get_end_iter(text_buffer, &end);
-                
-                gtk_text_buffer_insert_with_tags_by_name(text_buffer,
-                                                         &end,
-                                                         line_buffer,
-                                                         line_buffer_i,
-                                                         sgr_tag_name,
-                                                         NULL);
-            }
+                dump_buffer();
             break;
         case ASGR_TEXT_COLOR_1:
         case ASGR_TEXT_COLOR_2:
@@ -154,6 +157,9 @@ telnet_callback(int type, void *data)
         case ASGR_BG_COLOR_7:
         case ASGR_BG_COLOR_8:
         {
+            if(sgr_in_color)
+                dump_buffer();
+
             sgr_in_color = TRUE;
             
             switch(ac_data->arg) {
