@@ -55,6 +55,11 @@ static gboolean close_program(GtkWidget *widget,
     return TRUE;
 }
 
+static char **command_history = NULL;
+static size_t command_history_c = 0;
+static int command_history_i = 0;
+static int command_history_p = 0;
+
 static gboolean entry_keypress(GtkWidget   *widget,
                                GdkEventKey *event,
                                gpointer     user_data) 
@@ -73,9 +78,59 @@ static gboolean entry_keypress(GtkWidget   *widget,
         /* send the text */
         telnet_send(telnet, text);
 
+        /* save in history */
+        if(command_history != NULL)
+        {
+            if(command_history_c == command_history_i)
+                command_history = memory_grow_to_size(command_history, 
+                                                      sizeof(*command_history),
+                                                      &command_history_c,
+                                                      command_history_c*2);
+        }
+        else
+            command_history = memory_grow_to_size(command_history,
+                                                  sizeof(*command_history),
+                                                  &command_history_c,
+                                                  4);
+        
+        command_history[command_history_i++] = strdup(text);
+        command_history_p = command_history_i;
+    
         g_free(text);
 
         return TRUE;
+    }
+    else if(event->keyval == GDK_KEY_Up)
+    {
+        command_history_p--;
+        if(command_history_p < 0)
+            command_history_p = 0;
+
+        char *cmd = command_history[command_history_p];
+        
+        GtkTextIter start, end;
+        gtk_text_buffer_get_start_iter(entry_buffer, &start);
+        gtk_text_buffer_get_end_iter(entry_buffer, &end);
+        
+        gtk_text_buffer_delete(entry_buffer, &start, &end);
+
+        gtk_text_buffer_insert_at_cursor(entry_buffer, cmd, strlen(cmd));
+    }
+    else if(event->keyval == GDK_KEY_Down)
+    {
+        command_history_p++;
+        if(command_history_p > command_history_i-1)
+            command_history_p = command_history_i-1;
+
+        char *cmd = command_history[command_history_p];
+        
+        GtkTextIter start, end;
+        gtk_text_buffer_get_start_iter(entry_buffer, &start);
+        gtk_text_buffer_get_end_iter(entry_buffer, &end);
+        
+        gtk_text_buffer_delete(entry_buffer, &start, &end);
+
+        gtk_text_buffer_insert_at_cursor(entry_buffer, cmd, strlen(cmd));
     }
 
     return FALSE;    

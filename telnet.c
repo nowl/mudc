@@ -107,7 +107,7 @@ telnet_callback(int type, void *data)
         else
         {
             if(line_buffer_c == line_buffer_i)
-                line_buffer = memory_grow_to_size(line_buffer, &line_buffer_c, line_buffer_i+1);
+                line_buffer = memory_grow_to_size(line_buffer, sizeof(*line_buffer),  &line_buffer_c, line_buffer_i+1);
             line_buffer[line_buffer_i++] = '\n';
         }
         
@@ -127,7 +127,7 @@ telnet_callback(int type, void *data)
         else
         {
             if(line_buffer_c == line_buffer_i)
-                line_buffer = memory_grow_to_size(line_buffer, &line_buffer_c, line_buffer_i+1);
+                line_buffer = memory_grow_to_size(line_buffer, sizeof(*line_buffer), &line_buffer_c, line_buffer_i+1);
             line_buffer[line_buffer_i++] = ac_data->c;
         }
         break;
