@@ -6,6 +6,7 @@
 
 #include "telnet.h"
 #include "config.h"
+#include "tab_complete.h"
 
 #define MAIN_WINDOW_TITLE                "Mudc v. 0.1"
 #define UPDATE_INTERVAL_SECONDS          1
@@ -95,6 +96,8 @@ static gboolean entry_keypress(GtkWidget   *widget,
         
         command_history[command_history_i++] = strdup(text);
         command_history_p = command_history_i;
+
+        tab_complete_add_sentence(text);
     
         g_free(text);
 
@@ -115,6 +118,8 @@ static gboolean entry_keypress(GtkWidget   *widget,
         gtk_text_buffer_delete(entry_buffer, &start, &end);
 
         gtk_text_buffer_insert_at_cursor(entry_buffer, cmd, strlen(cmd));
+
+        return TRUE;
     }
     else if(event->keyval == GDK_KEY_Down)
     {
@@ -131,6 +136,42 @@ static gboolean entry_keypress(GtkWidget   *widget,
         gtk_text_buffer_delete(entry_buffer, &start, &end);
 
         gtk_text_buffer_insert_at_cursor(entry_buffer, cmd, strlen(cmd));
+
+        return TRUE;
+    }
+    else if(event->keyval == GDK_KEY_Tab)
+    {
+        GtkTextIter start, end;
+        gtk_text_buffer_get_start_iter(entry_buffer, &start);
+        gtk_text_buffer_get_end_iter(entry_buffer, &end);
+
+        gchar *text = gtk_text_buffer_get_text(entry_buffer, &start, &end, FALSE);
+
+        int num_results;
+        char **results = tab_complete_find_matches(text, &num_results);
+
+        if(num_results == 1)
+        {
+            /* if this is the only result then just replace the text with this */
+            gtk_text_buffer_delete(entry_buffer, &start, &end);
+            gtk_text_buffer_insert_at_cursor(entry_buffer, results[0], strlen(results[0]));
+        }
+        else if(num_results > 1)
+        {
+            /* if there are multiple results then display each one */
+            int i;
+            for(i=0; i<num_results; i++)
+            {
+                gtk_text_buffer_insert_at_cursor(text_buffer, results[i], strlen(results[i]));
+                char tmp[] = "\n";
+                gtk_text_buffer_insert_at_cursor(text_buffer, tmp, strlen(tmp));
+                gtk_text_buffer_get_end_iter(text_buffer, &end);
+                gtk_text_buffer_move_mark(text_buffer, text_mark, &end);
+                gtk_text_view_scroll_mark_onscreen(GTK_TEXT_VIEW(text_view), text_mark);
+            }
+        }
+
+        return TRUE;
     }
 
     return FALSE;    
@@ -216,6 +257,8 @@ main(int argc, char *argv[])
     GtkWidget *menu_bar;
 
     config_read();
+
+    tab_complete_set_wordlist_file("/home/nowl/.mudc/worlds/aardmud.org/tab");
 
     //telnet = telnet_connect("oak", 23);
     //telnet = telnet_connect("realmsofdespair.com", 4000);
@@ -330,6 +373,8 @@ main(int argc, char *argv[])
     gtk_widget_grab_focus(entry_view);
 
     gtk_main();
+
+    tab_complete_save();
     
     return 0;
 }

@@ -8,7 +8,8 @@ SRCS = \
 	base.c \
 	telnet.c \
 	config.c \
-	p_codes.c
+	p_codes.c \
+	tab_complete.c
 
 OBJS = $(SRCS:.c=.o)
 

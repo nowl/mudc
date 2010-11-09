@@ -69,9 +69,9 @@ void
 config_read()
 {
     char *home_dir = getenv("HOME");
-    int len = strlen(home_dir) + 6 + 1;
+    int len = strlen(home_dir) + 13 + 1;
     fin_name = malloc(sizeof(*fin_name) * len);
-    snprintf(fin_name, len, "%s/.mudc", home_dir);
+    snprintf(fin_name, len, "%s/.mudc/config", home_dir);
     read_values();
 }
 
