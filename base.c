@@ -18,7 +18,7 @@ static GtkTextBuffer  *text_buffer  = NULL;
 static GtkWidget      *entry_view   = NULL;
 static GtkTextBuffer  *entry_buffer = NULL;
 static GtkAdjustment  *vert_adj     = NULL;
-static GtkTextMark *text_mark = NULL;
+static GtkTextMark    *text_mark    = NULL;
 
 static void close_dialog_response(GtkDialog *dialog,
                                   gint response_id,
@@ -60,6 +60,9 @@ static char **command_history = NULL;
 static size_t command_history_c = 0;
 static int command_history_i = 0;
 static int command_history_p = 0;
+
+static char *text_to_find = NULL;
+static size_t text_to_find_c = 0;
 
 static gboolean entry_keypress(GtkWidget   *widget,
                                GdkEventKey *event,
@@ -147,14 +150,62 @@ static gboolean entry_keypress(GtkWidget   *widget,
 
         gchar *text = gtk_text_buffer_get_text(entry_buffer, &start, &end, FALSE);
 
+        gint curs_pos;
+        g_object_get(entry_buffer, 
+                     "cursor-position", &curs_pos,
+                     NULL);
+
+        char *tab_dividing_tokens = TAB_DIVIDING_TOKENS;
+        int i;
+        gboolean found_divider = FALSE;
+        for(i=curs_pos-1; i>=0; i--)
+        {
+            int j;            
+            for(j=0; j<sizeof(TAB_DIVIDING_TOKENS); j++)
+                if(text[i] == tab_dividing_tokens[j])
+                {
+                    found_divider = TRUE;
+                    break;
+                }
+            if(found_divider)
+                break;
+        }
+
+        i++;        
+
+        if(! text_to_find)
+        {
+            text_to_find = malloc(sizeof(*text_to_find) * 4);
+            text_to_find_c = 4;
+        }
+
+        int size = curs_pos - i;
+        if(text_to_find_c < size)
+            text_to_find = memory_grow_to_size(text_to_find, sizeof(*text_to_find), &text_to_find_c, size);
+
+        memcpy(text_to_find, &text[i], curs_pos - i);
+        text_to_find[curs_pos-i] = '\0';
+        
         int num_results;
-        char **results = tab_complete_find_matches(text, &num_results);
+        char **results = tab_complete_find_matches(text_to_find, &num_results);
+
+        if(!results)
+        {
+            g_free(text);
+            return TRUE;
+        }
 
         if(num_results == 1)
         {
             /* if this is the only result then just replace the text with this */
             gtk_text_buffer_delete(entry_buffer, &start, &end);
-            gtk_text_buffer_insert_at_cursor(entry_buffer, results[0], strlen(results[0]));
+
+            int len = strlen(results[0]) + i;
+            text_to_find = memory_grow_to_size(text_to_find, sizeof(*text_to_find), &text_to_find_c, len + 1);
+            memcpy(text_to_find, text, i);
+            memcpy(&text_to_find[i], results[0], strlen(results[0]));
+            text_to_find[len] = '\0';
+            gtk_text_buffer_insert_at_cursor(entry_buffer, text_to_find, len);
         }
         else if(num_results > 1)
         {
@@ -170,6 +221,8 @@ static gboolean entry_keypress(GtkWidget   *widget,
                 gtk_text_view_scroll_mark_onscreen(GTK_TEXT_VIEW(text_view), text_mark);
             }
         }
+
+        g_free(text);
 
         return TRUE;
     }

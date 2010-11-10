@@ -1,6 +1,8 @@
 #ifndef __TAB_COMPLETE_H__
 #define __TAB_COMPLETE_H__
 
+#define TAB_DIVIDING_TOKENS   " \n\t,.;\"'&%$#@!*+-/"
+
 /* Loads the word list from disk. */
 void tab_complete_set_wordlist_file(char *filename);
 

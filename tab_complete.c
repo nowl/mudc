@@ -4,7 +4,6 @@
 #include "tab_complete.h"
 #include "utils.h"
 
-#define DIVIDING_TOKENS   " \n\t,.;\"'&%$#@!*+-/"
 #define MAX_WORD_SIZE     512
 #define INIT_DICT_SIZE      4
 
@@ -34,7 +33,7 @@ add_word(char *word)
         word_list = memory_grow_to_size(word_list, sizeof(*word_list), &word_list_c, word_list_c * 2);
     
     word_list[word_list_i++] = strdup(word);
-    printf("adding '%s'\n", word);
+    //printf("adding '%s'\n", word);
 }
 
 static void
@@ -198,9 +197,9 @@ tab_complete_add_word(char *word)
     add_word(word);
     qsort(word_list, word_list_i, sizeof(*word_list), str_cmp);
 
-    int i;
-    for(i=0; i<word_list_i; i++)
-        printf("slot %d: %s\n", i, word_list[i]);
+    //int i;
+    //for(i=0; i<word_list_i; i++)
+    //    printf("slot %d: %s\n", i, word_list[i]);
 }
 
 void
@@ -219,11 +218,11 @@ void
 tab_complete_add_sentence(char *sentence)
 {
     char *tmp = strdup(sentence);
-    char *str = strtok(tmp, DIVIDING_TOKENS);
+    char *str = strtok(tmp, TAB_DIVIDING_TOKENS);
     
     do {
         if(str) tab_complete_add_word(str);
-        str = strtok(NULL, DIVIDING_TOKENS);
+        str = strtok(NULL, TAB_DIVIDING_TOKENS);
     } while(str);
 
     free(tmp);
