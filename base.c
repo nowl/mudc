@@ -13,6 +13,7 @@
 #define MAX_NUM_TEXT_BUFFER_LINES        5000
 
 static struct telnetp *telnet       = NULL;
+static GtkWidget *main_window = NULL;
 static GtkWidget      *text_view    = NULL;
 static GtkTextBuffer  *text_buffer  = NULL;
 static GtkWidget      *entry_view   = NULL;
@@ -262,6 +263,19 @@ menu_selection(GtkMenuItem *item,
     {
         close_program(NULL, NULL, NULL);
     } else if( strcmp(user_data, "settings.fonts") == 0) {
+        GtkWidget *dialog = gtk_dialog_new_with_buttons("Font Configuration",
+                                                        GTK_WINDOW(main_window),
+                                                        GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT,
+                                                        GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE,
+                                                        NULL);
+        GtkWidget *content_area = gtk_dialog_get_content_area(GTK_DIALOG(dialog));
+        gtk_box_pack_start_defaults(GTK_BOX(content_area), gtk_label_new("Select main window font"));
+        gtk_widget_show_all(dialog);
+        
+        gtk_dialog_run(GTK_DIALOG(dialog));
+        gtk_widget_destroy(dialog);
+        
+        #if 0
         GtkWidget *font_dlg = gtk_font_selection_dialog_new("Select foreground font");
         
         /* fill in the currently used font */
@@ -273,7 +287,8 @@ menu_selection(GtkMenuItem *item,
                          G_CALLBACK(font_dialog_response),
                          NULL);         
         gtk_dialog_run(GTK_DIALOG(font_dlg));
-        gtk_widget_destroy(font_dlg);                
+        gtk_widget_destroy(font_dlg);               
+        #endif
     }
 }              
 
@@ -304,8 +319,7 @@ telnet_processing_callback(gpointer data)
 
 int
 main(int argc, char *argv[])
-{
-    GtkWidget *main_window;
+{    
     GtkWidget *sizer_main;
     GtkWidget *menu_bar;
 
@@ -314,8 +328,8 @@ main(int argc, char *argv[])
     tab_complete_set_wordlist_file("/home/nowl/.mudc/worlds/aardmud.org/tab");
 
     //telnet = telnet_connect("oak", 23);
-    //telnet = telnet_connect("realmsofdespair.com", 4000);
-    telnet = telnet_connect("aardmud.org", 4000);
+    telnet = telnet_connect("realmsofdespair.com", 4000);
+    //telnet = telnet_connect("aardmud.org", 4000);
 
     if(!telnet)
     {
