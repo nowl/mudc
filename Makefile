@@ -5,15 +5,18 @@ LDFLAGS = -L../libtelnetp
 LIBS = $(shell pkg-config --libs gtk+-2.0) -ltelnetp -lz
 
 SRCS = \
-	base.c \
+	main.c \
 	telnet.c \
 	config.c \
 	p_codes.c \
-	tab_complete.c
+	tab_complete.c \
+	globals.c \
+	entry_handler.c \
+	gui.c
 
 OBJS = $(SRCS:.c=.o)
 
-MAIN = base
+MAIN = mudc
 
 .SUFFIXES: .c .o
 

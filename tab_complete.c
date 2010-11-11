@@ -1,8 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "tab_complete.h"
-#include "utils.h"
+#include "mudc.h"
 
 #define MAX_WORD_SIZE     512
 #define INIT_DICT_SIZE      4

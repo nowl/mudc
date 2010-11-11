@@ -3,7 +3,7 @@
 #include <string.h>
 #include <stdbool.h>
 
-#include "config.h"
+#include "mudc.h"
 
 #define NUM_CONFIGS   32
 #define MAX_LINE_LEN 512

@@ -2,8 +2,7 @@
 #include <stdbool.h>
 #include <string.h>
 
-#include "telnet.h"
-#include "utils.h"
+#include "mudc.h"
 
 static GtkTextBuffer *text_buffer = NULL;
 static GtkAdjustment *vert_adj = NULL;
