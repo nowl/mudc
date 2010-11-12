@@ -120,33 +120,36 @@ tree_selection_cb(GtkTreeSelection *selection, gpointer data)
 
         if(strcmp(selected_text, "Fonts") == 0)
         {
-            GtkWidget *s1 = gtk_hbox_new(FALSE, 5);
-            gtk_box_pack_start(GTK_BOX(sizer), s1, TRUE, FALSE, 0);
-            gtk_box_pack_start(GTK_BOX(s1), gtk_label_new("Main window font"), FALSE, FALSE, 10);
+            GtkWidget *ts1 = gtk_table_new(2, 2, FALSE);
+            gtk_table_set_row_spacings(GTK_TABLE(ts1), 10);
+            gtk_table_set_col_spacings(GTK_TABLE(ts1), 10);
+            gtk_box_pack_start(GTK_BOX(sizer), ts1, TRUE, FALSE, 0);
+
+            gtk_table_attach_defaults(GTK_TABLE(ts1), gtk_label_new("Main window font"), 
+                                      0, 1, 0, 1);
             char *font_name = config_get(CONFIG_MAIN_WINDOW_FONT);
             if(!font_name) font_name = "Not Set";
             GtkWidget *b1 = gtk_button_new_with_label(font_name);
+            gtk_table_attach_defaults(GTK_TABLE(ts1), b1, 1, 2, 0, 1);
             font_cb_data_main.config_type = CONFIG_MAIN_WINDOW_FONT;
             font_cb_data_main.text_view = MUDC.widgets.text_view;
             font_cb_data_main.button = b1;
             g_signal_connect(b1, "clicked",
                              G_CALLBACK(font_select_cb),
                              &font_cb_data_main);
-            gtk_box_pack_start(GTK_BOX(s1), b1, FALSE, FALSE, 0);
+            
 
-            s1 = gtk_hbox_new(FALSE, 5);
-            gtk_box_pack_start(GTK_BOX(sizer), s1, TRUE, FALSE, 0);
-            gtk_box_pack_start(GTK_BOX(s1), gtk_label_new("Text entry font"), FALSE, FALSE, 10);
+            gtk_table_attach_defaults(GTK_TABLE(ts1), gtk_label_new("Text entry font"), 0, 1, 1, 2);
             font_name = config_get(CONFIG_TEXT_ENTRY_FONT);
             if(!font_name) font_name = "Not Set";
             b1 = gtk_button_new_with_label(font_name);
+            gtk_table_attach_defaults(GTK_TABLE(ts1), b1, 1, 2, 1, 2);
             font_cb_data_entry.config_type = CONFIG_TEXT_ENTRY_FONT;
             font_cb_data_entry.text_view = MUDC.widgets.entry_view;
             font_cb_data_entry.button = b1;
             g_signal_connect(b1, "clicked",
                              G_CALLBACK(font_select_cb),
                              &font_cb_data_entry);
-            gtk_box_pack_start(GTK_BOX(s1), b1, FALSE, FALSE, 0);
         }
         else if(strcmp(selected_text, "Colors") == 0)
         {
@@ -197,6 +200,9 @@ void menu_handler(GtkMenuItem *item,
         GtkWidget *cb_data[] = {pref_sizer, dialog};
         g_signal_connect(G_OBJECT(select), "changed", G_CALLBACK(tree_selection_cb), cb_data);
         
+        g_object_set(tree,
+                     "width-request", 150,
+                     NULL);
         gtk_box_pack_start(GTK_BOX(sizer), tree, FALSE, FALSE, 0);
         gtk_box_pack_start_defaults(GTK_BOX(sizer), pref_sizer);
         
