@@ -1,114 +1,41 @@
 #include "mudc.h"
 
 #define MAIN_WINDOW_TITLE                "Mudc v. 0.1"
-#define UPDATE_INTERVAL_SECONDS          1
+#define UPDATE_INTERVAL_MS               (0.1 * 1000)
+#define UPDATE_INTERVAL_SECS             1
 #define MAX_NUM_TEXT_BUFFER_LINES        5000
 
-static void close_dialog_response(GtkDialog *dialog,
-                                  gint response_id,
-                                  gpointer user_data)
-{
-    if(response_id == GTK_RESPONSE_YES)
-    {
-        if(MUDC.telnet)
-            telnet_close(MUDC.telnet);
-        gtk_main_quit();
-    }
-}
-
-static gboolean close_program(GtkWidget *widget,
-                              GdkEvent *event,
-                              gpointer data)
-{
-#if 0
-    GtkWidget *dialog = gtk_message_dialog_new(GTK_WINDOW(data),
-                                               GTK_DIALOG_DESTROY_WITH_PARENT,
-                                               GTK_MESSAGE_QUESTION,
-                                               GTK_BUTTONS_YES_NO,
-                                               (const gchar *)"Are you sure you wish to exit?");
-
-    g_signal_connect(dialog, "response",
-                     G_CALLBACK(close_dialog_response),
-                     NULL);
-    
-    gtk_dialog_run(GTK_DIALOG(dialog));
-    gtk_widget_destroy(dialog);
-#endif
-
-    close_dialog_response(NULL, GTK_RESPONSE_YES, NULL);
-
-    return TRUE;
-}
-
-static void
-font_set(char *font_name)
+void
+view_font_set(GtkTextView *text_view, char *font_name)
 {
     PangoFontDescription * pfd = pango_font_description_from_string(font_name);
-    gtk_widget_modify_font(MUDC.widgets.text_view, pfd);
+    gtk_widget_modify_font(text_view, pfd);
     pango_font_description_free(pfd);
 }
-
-static void font_dialog_response(GtkDialog *dialog,
-                                 gint response_id,
-                                 gpointer user_data)
-{
-    gchar *font_name = gtk_font_selection_dialog_get_font_name(GTK_FONT_SELECTION_DIALOG(dialog));
-    if(font_name)
-    {
-        /* set in config */
-        config_set(CONFIG_FONT_NAME, font_name);
-
-        font_set(font_name);
-
-        g_free(font_name);
-    }
-}
-
-static void
-menu_selection(GtkMenuItem *item,
-               gpointer user_data)
-{
-    if( strcmp(user_data, "file.quit") == 0)
-    {
-        close_program(NULL, NULL, NULL);
-    } else if( strcmp(user_data, "settings.fonts") == 0) {
-        GtkWidget *dialog = gtk_dialog_new_with_buttons("Font Configuration",
-                                                        GTK_WINDOW(MUDC.widgets.main_window),
-                                                        GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT,
-                                                        GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE,
-                                                        NULL);
-        GtkWidget *content_area = gtk_dialog_get_content_area(GTK_DIALOG(dialog));
-        gtk_box_pack_start_defaults(GTK_BOX(content_area), gtk_label_new("Select main window font"));
-        gtk_widget_show_all(dialog);
-        
-        gtk_dialog_run(GTK_DIALOG(dialog));
-        gtk_widget_destroy(dialog);
-        
-        #if 0
-        GtkWidget *font_dlg = gtk_font_selection_dialog_new("Select foreground font");
-        
-        /* fill in the currently used font */
-        char *font_name = config_get(CONFIG_FONT_NAME);
-        if(font_name)
-            gtk_font_selection_dialog_set_font_name(GTK_FONT_SELECTION_DIALOG(font_dlg), font_name);
-
-        g_signal_connect(font_dlg, "response",
-                         G_CALLBACK(font_dialog_response),
-                         NULL);         
-        gtk_dialog_run(GTK_DIALOG(font_dlg));
-        gtk_widget_destroy(font_dlg);               
-        #endif
-    }
-}              
 
 static gboolean
 telnet_processing_callback(gpointer data)
 {
+    /* TODO: possibly return FALSE here and then add this back into the look */
+    if(!data)
+        return TRUE;
+
     int new_data = telnet_process((struct telnetp *)data);
     
     if(new_data) {
         GtkTextIter iter;
         gtk_text_buffer_get_end_iter(MUDC.widgets.text_buffer, &iter);
+
+        /* TODO: add everything to tab completion */
+/*
+        GtkTextIter mark;
+        gtk_text_buffer_get_iter_at_mark(MUDC.widgets.text_buffer, &mark, MUDC.widgets.text_mark);
+        gchar *text = gtk_text_buffer_get_text(MUDC.widgets.text_buffer, &mark, &iter, FALSE);
+        printf("adding %s\n", text);
+        tab_complete_add_sentence(text);
+        g_free(text);
+*/
+
         gtk_text_buffer_move_mark(MUDC.widgets.text_buffer, MUDC.widgets.text_mark, &iter);
         gtk_text_view_scroll_mark_onscreen(GTK_TEXT_VIEW(MUDC.widgets.text_view), MUDC.widgets.text_mark);
 
@@ -126,6 +53,17 @@ telnet_processing_callback(gpointer data)
     return TRUE;
 }
 
+static void
+initialize_from_config()
+{
+    char *font_name = config_get(CONFIG_MAIN_WINDOW_FONT);
+    if(font_name)
+        view_font_set(GTK_TEXT_VIEW(MUDC.widgets.text_view), font_name);
+    font_name = config_get(CONFIG_TEXT_ENTRY_FONT);
+    if(font_name)
+        view_font_set(GTK_TEXT_VIEW(MUDC.widgets.entry_view), font_name);
+}
+
 void 
 gui_init(int *argc, char **argv[])
 {
@@ -134,8 +72,10 @@ gui_init(int *argc, char **argv[])
     
     gtk_init(argc, argv);
     
-    g_timeout_add_seconds_full(G_PRIORITY_DEFAULT, UPDATE_INTERVAL_SECONDS,
-                               telnet_processing_callback, MUDC.telnet, NULL);
+//    g_timeout_add_seconds_full(G_PRIORITY_DEFAULT, UPDATE_INTERVAL_SECS,
+//                               telnet_processing_callback, MUDC.telnet, NULL);
+    g_timeout_add_full(G_PRIORITY_DEFAULT, UPDATE_INTERVAL_MS,
+                       telnet_processing_callback, MUDC.telnet, NULL);
     
     /* set up main window */
     MUDC.widgets.main_window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
@@ -149,7 +89,7 @@ gui_init(int *argc, char **argv[])
     gtk_box_set_homogeneous(GTK_BOX(sizer_main), FALSE);
     
     g_signal_connect_swapped(MUDC.widgets.main_window, "delete-event",
-                             G_CALLBACK(close_program),
+                             G_CALLBACK(menu_close_program),
                              MUDC.widgets.main_window);
 
     /* set up menu bar */
@@ -168,15 +108,15 @@ gui_init(int *argc, char **argv[])
     GtkWidget *quit_item = gtk_menu_item_new_with_label("Quit");
     gtk_menu_shell_append(GTK_MENU_SHELL(file_menu), quit_item);
     g_signal_connect(quit_item, "activate",
-                     G_CALLBACK(menu_selection),
+                     G_CALLBACK(menu_handler),
                      (gpointer)"file.quit");
 
     /* set up settings menu */
-    GtkWidget *font_config_item = gtk_menu_item_new_with_label("Fonts");
-    gtk_menu_shell_append(GTK_MENU_SHELL(settings_menu), font_config_item);
-    g_signal_connect(font_config_item, "activate",
-                     G_CALLBACK(menu_selection),
-                     (gpointer)"settings.fonts");
+    GtkWidget *pref_config_item = gtk_menu_item_new_with_label("Preferences...");
+    gtk_menu_shell_append(GTK_MENU_SHELL(settings_menu), pref_config_item);
+    g_signal_connect(pref_config_item, "activate",
+                     G_CALLBACK(menu_handler),
+                     (gpointer)"settings.preferences");
     
     gtk_box_pack_start(GTK_BOX(sizer_main), menu_bar, FALSE, FALSE, 0);
 
@@ -220,10 +160,8 @@ gui_init(int *argc, char **argv[])
     
     gtk_widget_show_all(MUDC.widgets.main_window);
 
-    /* set font */
-    char *font_name = config_get(CONFIG_FONT_NAME);
-    if(font_name)
-        font_set(font_name);
+    /* intialize gui from config file */
+    initialize_from_config();
 
     /* set colors */
     GdkColor color;

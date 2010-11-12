@@ -1,0 +1,28 @@
+#+STARTUP: showall
+
+Menus
+
+* TODO Worlds
+** TODO Configure
+   - A dialog box with a list of muds connected to with the option of
+     adding a new one. Also have a button for connecting to the
+     selected mud.
+** TODO Recent Worlds
+   - Show last 5 worlds or so, automatic connection
+** TODO Disconnect
+   - Disconnects from the current world, grayed out if not connected
+     to a world.
+
+* TODO Config/Preferences
+** TODO add color configurations
+
+* TODO make echo telnet option work
+
+* TODO lua scripting environment
+* TODO aliases
+* TODO paths
+* TODO triggers
+* TODO macros
+
+* DONE tab completion
+* DONE history

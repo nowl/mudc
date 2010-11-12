@@ -42,7 +42,16 @@ gboolean
 entry_handler_keypress(GtkWidget   *widget,
                        GdkEventKey *event,
                        gpointer     user_data);
+void
+menu_handler(GtkMenuItem *item,
+             gpointer user_data);
 
+gboolean 
+menu_close_program(GtkWidget *widget,
+                   GdkEvent *event,
+                   gpointer data);
+    
 void gui_init(int *argc, char **argv[]);
+void view_font_set(GtkTextView *text_view, char *font_name);
 
 #endif  /* __MUDC_H__ */

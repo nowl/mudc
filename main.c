@@ -29,13 +29,7 @@ main(int argc, char *argv[])
 
     //MUDC.telnet = telnet_connect("oak", 23);
     //MUDC.telnet = telnet_connect("realmsofdespair.com", 4000);
-    MUDC.telnet = telnet_connect("aardmud.org", 4000);
-
-    if(!MUDC.telnet)
-    {
-        printf("problem connecting\n");
-        return 1;
-    }
+    //MUDC.telnet = telnet_connect("aardmud.org", 4000);
 
     gui_init(&argc, &argv);
 

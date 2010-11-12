@@ -1,7 +1,8 @@
 #ifndef __CONFIG_H__
 #define __CONFIG_H__
 
-#define CONFIG_FONT_NAME   "Font"
+#define CONFIG_MAIN_WINDOW_FONT   "MainWindowFont"
+#define CONFIG_TEXT_ENTRY_FONT    "TextEntryFont"
 
 void config_read();
 char *config_get(char *key);

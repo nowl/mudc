@@ -40,6 +40,12 @@ entry_handler_keypress(GtkWidget   *widget,
     
         g_free(text);
 
+        /* add a newline */
+        /*
+        text = "\n";
+        gtk_text_buffer_insert_at_cursor(MUDC.widgets.text_buffer, text, strlen(text));
+        */
+
         return TRUE;
     }
     else if(event->keyval == GDK_KEY_Up)

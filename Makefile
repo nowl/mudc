@@ -12,7 +12,8 @@ SRCS = \
 	tab_complete.c \
 	globals.c \
 	entry_handler.c \
-	gui.c
+	gui.c \
+	menu.c
 
 OBJS = $(SRCS:.c=.o)
 
