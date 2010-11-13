@@ -42,9 +42,8 @@ gboolean
 entry_handler_keypress(GtkWidget   *widget,
                        GdkEventKey *event,
                        gpointer     user_data);
-void
-menu_handler(GtkMenuItem *item,
-             gpointer user_data);
+
+void settings_dialog_run();
 
 gboolean 
 menu_close_program(GtkWidget *widget,
@@ -52,6 +51,7 @@ menu_close_program(GtkWidget *widget,
                    gpointer data);
     
 void gui_init(int *argc, char **argv[]);
-void view_font_set(GtkTextView *text_view, char *font_name);
+void view_font_set(GtkWidget *text_view, char *font_name);
+void worlds_configure_run();
 
 #endif  /* __MUDC_H__ */

@@ -6,7 +6,7 @@
 #define MAX_NUM_TEXT_BUFFER_LINES        5000
 
 void
-view_font_set(GtkTextView *text_view, char *font_name)
+view_font_set(GtkWidget *text_view, char *font_name)
 {
     PangoFontDescription * pfd = pango_font_description_from_string(font_name);
     gtk_widget_modify_font(text_view, pfd);
@@ -17,10 +17,10 @@ static gboolean
 telnet_processing_callback(gpointer data)
 {
     /* TODO: possibly return FALSE here and then add this back into the look */
-    if(!data)
+    if(!MUDC.telnet)
         return TRUE;
 
-    int new_data = telnet_process((struct telnetp *)data);
+    int new_data = telnet_process(MUDC.telnet);
     
     if(new_data) {
         GtkTextIter iter;
@@ -58,11 +58,27 @@ initialize_from_config()
 {
     char *font_name = config_get(CONFIG_MAIN_WINDOW_FONT);
     if(font_name)
-        view_font_set(GTK_TEXT_VIEW(MUDC.widgets.text_view), font_name);
+        view_font_set(MUDC.widgets.text_view, font_name);
     font_name = config_get(CONFIG_TEXT_ENTRY_FONT);
     if(font_name)
-        view_font_set(GTK_TEXT_VIEW(MUDC.widgets.entry_view), font_name);
+        view_font_set(MUDC.widgets.entry_view, font_name);
 }
+
+
+static void 
+menu_handler(GtkMenuItem *item,
+             gpointer user_data)
+{
+    if( strcmp(user_data, "file.quit") == 0)
+    {
+        menu_close_program(NULL, NULL, NULL);
+    } else if( strcmp(user_data, "settings.preferences") == 0) {
+        settings_dialog_run();
+    } else if( strcmp(user_data, "worlds.configure") == 0 ) {
+        worlds_configure_run();
+    }
+}              
+
 
 void 
 gui_init(int *argc, char **argv[])
@@ -75,7 +91,7 @@ gui_init(int *argc, char **argv[])
 //    g_timeout_add_seconds_full(G_PRIORITY_DEFAULT, UPDATE_INTERVAL_SECS,
 //                               telnet_processing_callback, MUDC.telnet, NULL);
     g_timeout_add_full(G_PRIORITY_DEFAULT, UPDATE_INTERVAL_MS,
-                       telnet_processing_callback, MUDC.telnet, NULL);
+                       telnet_processing_callback, NULL, NULL);
     
     /* set up main window */
     MUDC.widgets.main_window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
@@ -99,6 +115,11 @@ gui_init(int *argc, char **argv[])
     gtk_menu_item_set_submenu(GTK_MENU_ITEM(file_item), file_menu);
     gtk_menu_shell_append(GTK_MENU_SHELL(menu_bar), file_item);
 
+    GtkWidget *worlds_menu = gtk_menu_new();
+    GtkWidget *worlds_item = gtk_menu_item_new_with_label("Worlds");
+    gtk_menu_item_set_submenu(GTK_MENU_ITEM(worlds_item), worlds_menu);
+    gtk_menu_shell_append(GTK_MENU_SHELL(menu_bar), worlds_item);
+
     GtkWidget *settings_menu = gtk_menu_new();
     GtkWidget *settings_item = gtk_menu_item_new_with_label("Settings");
     gtk_menu_item_set_submenu(GTK_MENU_ITEM(settings_item), settings_menu);
@@ -110,6 +131,14 @@ gui_init(int *argc, char **argv[])
     g_signal_connect(quit_item, "activate",
                      G_CALLBACK(menu_handler),
                      (gpointer)"file.quit");
+
+    /* set up worlds menu */
+    
+    GtkWidget *worlds_config_item = gtk_menu_item_new_with_label("Configure..");
+    gtk_menu_shell_append(GTK_MENU_SHELL(worlds_menu), worlds_config_item);
+    g_signal_connect(worlds_config_item, "activate",
+                     G_CALLBACK(menu_handler),
+                     (gpointer)"worlds.configure");
 
     /* set up settings menu */
     GtkWidget *pref_config_item = gtk_menu_item_new_with_label("Preferences...");

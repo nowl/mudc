@@ -13,7 +13,8 @@ SRCS = \
 	globals.c \
 	entry_handler.c \
 	gui.c \
-	menu.c
+	settings.c \
+	worlds.c
 
 OBJS = $(SRCS:.c=.o)
 

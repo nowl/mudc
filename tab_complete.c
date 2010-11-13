@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include <sys/stat.h>
 
 #include "mudc.h"
 
@@ -132,6 +133,8 @@ str_cmp(const void *a, const void *b)
 void
 tab_complete_set_wordlist_file(char *filename)
 {
+    printf("setting wordlist file to '%s'\n", filename);
+
     free_words_in_dict();
 
     if(source_filename) 
@@ -204,13 +207,16 @@ tab_complete_add_word(char *word)
 void
 tab_complete_save()
 {
-    FILE *fout = fopen(source_filename, "w");
-    int i;
-
-    for(i=0; i<word_list_i; i++)
-        fprintf(fout, "%s\n", word_list[i]);
-
-    fclose(fout);
+    if(source_filename)
+    {
+        FILE *fout = fopen(source_filename, "w");
+        int i;
+        
+        for(i=0; i<word_list_i; i++)
+            fprintf(fout, "%s\n", word_list[i]);
+        
+        fclose(fout);
+    }
 }
 
 void

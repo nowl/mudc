@@ -229,7 +229,8 @@ telnet_process(struct telnetp *tn)
 void
 telnet_close(struct telnetp *tn)
 {
-    telnetp_close(tn);
+    if(tn)
+        telnetp_close(tn);
 }
 
 void

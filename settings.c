@@ -73,7 +73,7 @@ font_dialog_response(GtkDialog *dialog,
         /* set in config */
         config_set(((struct font_callback_data *)data)->config_type, font_name);
         
-        view_font_set(GTK_TEXT_VIEW(((struct font_callback_data *)data)->text_view),
+        view_font_set(((struct font_callback_data *)data)->text_view,
                       font_name);
 
         GtkWidget *button = ((struct font_callback_data *)data)->button;
@@ -162,54 +162,50 @@ tree_selection_cb(GtkTreeSelection *selection, gpointer data)
     }
 }
 
-void menu_handler(GtkMenuItem *item,
-                  gpointer user_data)
+void
+settings_dialog_run()
 {
-    if( strcmp(user_data, "file.quit") == 0)
-    {
-        menu_close_program(NULL, NULL, NULL);
-    } else if( strcmp(user_data, "settings.preferences") == 0) {
-        GtkWidget *dialog= gtk_dialog_new_with_buttons("Mudc Preferences",
-                                                       GTK_WINDOW(MUDC.widgets.main_window),
-                                                       GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT,
-                                                       GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE,
-                                                       NULL);
+    GtkWidget *dialog= gtk_dialog_new_with_buttons("Mudc Preferences",
+                                                   GTK_WINDOW(MUDC.widgets.main_window),
+                                                   GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT,
+                                                   GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE,
+                                                   NULL);
 
-        gtk_window_set_default_size(GTK_WINDOW(dialog), 640, 480);
+    gtk_window_set_default_size(GTK_WINDOW(dialog), 640, 480);
 
-        GtkWidget *content_area = gtk_dialog_get_content_area(GTK_DIALOG(dialog));
+    GtkWidget *content_area = gtk_dialog_get_content_area(GTK_DIALOG(dialog));
         
-        GtkWidget *sizer = gtk_hbox_new(FALSE, 5);
+    GtkWidget *sizer = gtk_hbox_new(FALSE, 5);
 
-        GtkListStore *store = gtk_list_store_new(1, G_TYPE_STRING);
-        GtkTreeIter iter;
-        gtk_list_store_append(store, &iter);
-        gtk_list_store_set(store, &iter, 0, "Fonts", -1);
-        gtk_list_store_append(store, &iter);
-        gtk_list_store_set(store, &iter, 0, "Colors", -1);
-        GtkWidget *tree = gtk_tree_view_new_with_model(GTK_TREE_MODEL(store));
-        GtkCellRenderer *renderer = gtk_cell_renderer_text_new();
-        GtkTreeViewColumn *column = gtk_tree_view_column_new_with_attributes("", renderer, "text", 0, NULL);
-        gtk_tree_view_append_column(GTK_TREE_VIEW (tree), column);
-        gtk_tree_view_set_headers_visible(GTK_TREE_VIEW(tree), FALSE);
+    GtkListStore *store = gtk_list_store_new(1, G_TYPE_STRING);
+    GtkTreeIter iter;
+    gtk_list_store_append(store, &iter);
+    gtk_list_store_set(store, &iter, 0, "Fonts", -1);
+    gtk_list_store_append(store, &iter);
+    gtk_list_store_set(store, &iter, 0, "Colors", -1);
+    GtkWidget *tree = gtk_tree_view_new_with_model(GTK_TREE_MODEL(store));
+    GtkCellRenderer *renderer = gtk_cell_renderer_text_new();
+    GtkTreeViewColumn *column = gtk_tree_view_column_new_with_attributes("", renderer, "text", 0, NULL);
+    gtk_tree_view_append_column(GTK_TREE_VIEW (tree), column);
+    gtk_tree_view_set_headers_visible(GTK_TREE_VIEW(tree), FALSE);
         
-        GtkTreeSelection *select = gtk_tree_view_get_selection(GTK_TREE_VIEW (tree));
-        gtk_tree_selection_set_mode (select, GTK_SELECTION_SINGLE);
+    GtkTreeSelection *select = gtk_tree_view_get_selection(GTK_TREE_VIEW (tree));
+    gtk_tree_selection_set_mode (select, GTK_SELECTION_SINGLE);
             
-        GtkWidget * pref_sizer = gtk_vbox_new(TRUE, 5);
-        GtkWidget *cb_data[] = {pref_sizer, dialog};
-        g_signal_connect(G_OBJECT(select), "changed", G_CALLBACK(tree_selection_cb), cb_data);
+    GtkWidget * pref_sizer = gtk_vbox_new(TRUE, 5);
+    GtkWidget *cb_data[] = {pref_sizer, dialog};
+    g_signal_connect(G_OBJECT(select), "changed", G_CALLBACK(tree_selection_cb), cb_data);
         
-        g_object_set(tree,
-                     "width-request", 150,
-                     NULL);
-        gtk_box_pack_start(GTK_BOX(sizer), tree, FALSE, FALSE, 0);
-        gtk_box_pack_start_defaults(GTK_BOX(sizer), pref_sizer);
+    g_object_set(tree,
+                 "width-request", 150,
+                 NULL);
+    gtk_box_pack_start(GTK_BOX(sizer), tree, FALSE, FALSE, 0);
+    gtk_box_pack_start_defaults(GTK_BOX(sizer), pref_sizer);
         
-        gtk_box_pack_start_defaults(GTK_BOX(content_area), sizer);
-        gtk_widget_show_all(dialog);
+    gtk_box_pack_start_defaults(GTK_BOX(content_area), sizer);
+    gtk_widget_show_all(dialog);
         
-        gtk_dialog_run(GTK_DIALOG(dialog));
-        gtk_widget_destroy(dialog);
-    }
-}              
+    gtk_dialog_run(GTK_DIALOG(dialog));
+    gtk_widget_destroy(dialog);
+
+}

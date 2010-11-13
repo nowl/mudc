@@ -25,15 +25,11 @@ main(int argc, char *argv[])
 
     config_read();
 
-    tab_complete_set_wordlist_file("/home/nowl/.mudc/worlds/aardmud.org/tab");
-
-    //MUDC.telnet = telnet_connect("oak", 23);
-    //MUDC.telnet = telnet_connect("realmsofdespair.com", 4000);
-    //MUDC.telnet = telnet_connect("aardmud.org", 4000);
-
     gui_init(&argc, &argv);
 
     gtk_main();
+
+    telnet_close(MUDC.telnet);
 
     tab_complete_save();
     
