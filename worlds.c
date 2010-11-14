@@ -96,6 +96,9 @@ dialog_response(GtkDialog *dialog,
         g_value_unset(&hostname_value);
         g_value_unset(&port_value);
 
+        /* save off old tab_completion file */
+        tab_complete_save();
+
         /* set up the tab completion file */
         char *home_dir = getenv("HOME");
         int len = strlen(home_dir) + MAX_LINE_LEN + 18 + 1;
@@ -120,6 +123,12 @@ dialog_response(GtkDialog *dialog,
         /* disconnect from current telnet connection */
         telnet_close(MUDC.telnet);
         MUDC.telnet = NULL;
+
+        /* clear text buffer */
+        GtkTextIter start, end;
+        gtk_text_buffer_get_start_iter(MUDC.widgets.text_buffer, &start);
+        gtk_text_buffer_get_end_iter(MUDC.widgets.text_buffer, &end);
+        gtk_text_buffer_delete(MUDC.widgets.text_buffer, &start, &end);
         
         /* fire up the telnet connection */
         MUDC.telnet = telnet_connect(hostname, port);

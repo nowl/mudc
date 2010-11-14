@@ -6,8 +6,7 @@ static void close_dialog_response(GtkDialog *dialog,
 {
     if(response_id == GTK_RESPONSE_YES)
     {
-        if(MUDC.telnet)
-            telnet_close(MUDC.telnet);
+        telnet_close(MUDC.telnet);
         gtk_main_quit();
     }
 }

@@ -229,8 +229,22 @@ telnet_process(struct telnetp *tn)
 void
 telnet_close(struct telnetp *tn)
 {
+    /* TODO: all of these telnetp pointers could simply be
+     * MUDC.telnet */
+
     if(tn)
+    {
         telnetp_close(tn);
+
+        /* reset some of the static vars */
+        need_refresh = FALSE;
+        line_buffer = NULL;
+        line_buffer_c = 0;
+        line_buffer_i = 0;
+        buffering_chars = FALSE;
+        sgr_in_color = FALSE;
+        sgr_tag_name;
+    }
 }
 
 void
