@@ -74,7 +74,9 @@ dialog_response(GtkDialog *dialog,
                 gint response_id,
                 gpointer user_data)
 {
-    if(response_id == CONNECT_TO_WORLD)
+    switch(response_id)
+    {
+    case CONNECT_TO_WORLD:
     {
         GtkWidget *tree = user_data;
         GtkTreeSelection *selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(tree));
@@ -146,7 +148,31 @@ dialog_response(GtkDialog *dialog,
         }
 
         free(hostname);
+
+        gtk_widget_destroy(dialog);
+
+        break;
     }
+    case ADD_WORLD:
+    {
+        /* TODO: finish this */
+        break;
+    }
+    case REMOVE_WORLD:
+    {
+        GtkWidget *tree = user_data;
+        GtkTreeSelection *selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(tree));
+        GList *selected_rows = gtk_tree_selection_get_selected_rows(selection, NULL);
+        
+        GtkTreePath *path = selected_rows->data;
+        GtkTreeModel *model = gtk_tree_view_get_model(GTK_TREE_VIEW(tree));
+        GtkTreeIter iter;        
+        gtk_tree_model_get_iter(model, &iter, path);
+        gtk_list_store_remove(GTK_LIST_STORE(model), &iter);
+
+        break;
+    }
+    };
 }
 
 void
@@ -190,5 +216,4 @@ worlds_configure_run()
     gtk_widget_show_all(dialog);
         
     gtk_dialog_run(GTK_DIALOG(dialog));
-    gtk_widget_destroy(dialog);
 }
