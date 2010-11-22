@@ -1,9 +1,6 @@
-#include <sys/stat.h>
-
 #include "mudc.h"
 
 #define WORLD_CONFIG_PATH      ".mudc/world.cfg"
-#define MAX_LINE_LEN           512
 
 enum columns {
     WORLD_NAME,                 /* G_TYPE_STRING */
@@ -198,10 +195,6 @@ dialog_response(GtkWidget *dialog,
 
         /* create each level of the directory structure since a -p
          * type option doesn't exist AFAIK  */
-        snprintf(tab_complete_name, len, "%s/.mudc", home_dir);
-        mkdir(tab_complete_name, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
-        snprintf(tab_complete_name, len, "%s/.mudc/worlds", home_dir);
-        mkdir(tab_complete_name, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
         snprintf(tab_complete_name, len, "%s/.mudc/worlds/%s", home_dir, hostname);
         mkdir(tab_complete_name, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
         snprintf(tab_complete_name, len, "%s/.mudc/worlds/%s/tab", home_dir, hostname);

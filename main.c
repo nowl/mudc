@@ -16,6 +16,16 @@ void init_mudc()
         
     MUDC.buffers.text_to_find_c = 12;
     MUDC.buffers.text_to_find = malloc(sizeof(*MUDC.buffers.text_to_find) * MUDC.buffers.text_to_find_c);
+
+    /* create base directories if they don't exist */
+    char *home_dir = getenv("HOME");
+    int len = strlen(home_dir) + MAX_LINE_LEN + 18 + 1;
+    char *tab_complete_name = malloc(sizeof(*tab_complete_name) * len);
+    
+    snprintf(tab_complete_name, len, "%s/.mudc", home_dir);
+    mkdir(tab_complete_name, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+    snprintf(tab_complete_name, len, "%s/.mudc/worlds", home_dir);
+    mkdir(tab_complete_name, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 }
 
 int

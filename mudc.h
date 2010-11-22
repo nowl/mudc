@@ -1,10 +1,14 @@
 #ifndef __MUDC_H__
 #define __MUDC_H__
 
+#include <sys/stat.h>
+
 #include "config.h"
 #include "telnet.h"
 #include "config.h"
 #include "tab_complete.h"
+
+#define MAX_LINE_LEN           512
 
 struct mudc
 {

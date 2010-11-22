@@ -243,7 +243,6 @@ telnet_close(struct telnetp *tn)
         line_buffer_i = 0;
         buffering_chars = FALSE;
         sgr_in_color = FALSE;
-        sgr_tag_name;
     }
 }
 
