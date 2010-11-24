@@ -120,12 +120,14 @@ tree_selection_cb(GtkTreeSelection *selection, gpointer data)
         if(strcmp(selected_text, "Fonts") == 0)
         {
             GtkWidget *ts1 = gtk_table_new(2, 2, FALSE);
+            gtk_container_set_border_width(GTK_CONTAINER(ts1), 50);
             gtk_table_set_row_spacings(GTK_TABLE(ts1), 10);
             gtk_table_set_col_spacings(GTK_TABLE(ts1), 10);
             gtk_box_pack_start(GTK_BOX(sizer), ts1, TRUE, FALSE, 0);
 
-            gtk_table_attach_defaults(GTK_TABLE(ts1), gtk_label_new("Main window font"), 
-                                      0, 1, 0, 1);
+            GtkWidget *label1 = gtk_label_new("Main window font");
+            gtk_misc_set_alignment(GTK_MISC(label1), 0, 0.5);
+            gtk_table_attach_defaults(GTK_TABLE(ts1), label1, 0, 1, 0, 1);
             char *font_name = config_get(CONFIG_MAIN_WINDOW_FONT);
             if(!font_name) font_name = "Not Set";
             GtkWidget *b1 = gtk_button_new_with_label(font_name);
@@ -137,8 +139,9 @@ tree_selection_cb(GtkTreeSelection *selection, gpointer data)
                              G_CALLBACK(font_select_cb),
                              &font_cb_data_main);
             
-
-            gtk_table_attach_defaults(GTK_TABLE(ts1), gtk_label_new("Text entry font"), 0, 1, 1, 2);
+            label1 = gtk_label_new("Text entry font");
+            gtk_misc_set_alignment(GTK_MISC(label1), 0, 0.5);
+            gtk_table_attach_defaults(GTK_TABLE(ts1), label1, 0, 1, 1, 2);
             font_name = config_get(CONFIG_TEXT_ENTRY_FONT);
             if(!font_name) font_name = "Not Set";
             b1 = gtk_button_new_with_label(font_name);

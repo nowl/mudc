@@ -7,6 +7,7 @@
 #include "telnet.h"
 #include "config.h"
 #include "tab_complete.h"
+#include "macros.h"
 
 #define MAX_LINE_LEN           512
 

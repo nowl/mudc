@@ -14,7 +14,8 @@ SRCS = \
 	entry_handler.c \
 	gui.c \
 	settings.c \
-	worlds.c
+	worlds.c \
+	macros.c
 
 OBJS = $(SRCS:.c=.o)
 
