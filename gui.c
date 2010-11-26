@@ -64,7 +64,6 @@ initialize_from_config()
         view_font_set(MUDC.widgets.entry_view, font_name);
 }
 
-
 static void 
 menu_handler(GtkMenuItem *item,
              gpointer user_data)
@@ -76,6 +75,8 @@ menu_handler(GtkMenuItem *item,
         settings_dialog_run();
     } else if( strcmp(user_data, "worlds.configure") == 0 ) {
         worlds_configure_run();
+    } else if( strcmp(user_data, "settings.macros") == 0 ) {
+        macros_configure_run();
     }
 }              
 
@@ -87,7 +88,7 @@ gui_init(int *argc, char **argv[])
     GtkWidget *menu_bar;
     
     gtk_init(argc, argv);
-    
+
 //    g_timeout_add_seconds_full(G_PRIORITY_DEFAULT, UPDATE_INTERVAL_SECS,
 //                               telnet_processing_callback, MUDC.telnet, NULL);
     g_timeout_add_full(G_PRIORITY_DEFAULT, UPDATE_INTERVAL_MS,
@@ -146,7 +147,17 @@ gui_init(int *argc, char **argv[])
     g_signal_connect(pref_config_item, "activate",
                      G_CALLBACK(menu_handler),
                      (gpointer)"settings.preferences");
-    
+
+    MUDC.widgets.macros_menu_item = gtk_menu_item_new_with_label("Macros");
+    gtk_menu_shell_append(GTK_MENU_SHELL(settings_menu), MUDC.widgets.macros_menu_item);
+    g_signal_connect(MUDC.widgets.macros_menu_item, "activate",
+                     G_CALLBACK(menu_handler),
+                     (gpointer)"settings.macros");
+
+    /* macros init */
+    macros_init();
+    gtk_widget_set_sensitive(MUDC.widgets.macros_menu_item, FALSE);
+        
     gtk_box_pack_start(GTK_BOX(sizer_main), menu_bar, FALSE, FALSE, 0);
 
     /* set up text view */

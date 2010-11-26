@@ -25,6 +25,7 @@ struct mudc
         GtkTextBuffer *entry_buffer;
         GtkAdjustment *vert_adj;
         GtkTextMark   *text_mark;
+        GtkWidget     *macros_menu_item;
     } widgets;
 
     struct 

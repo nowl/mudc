@@ -116,6 +116,9 @@ write_to_config(GtkListStore *store)
         fputs(port_as_string, fout);
         fputc('\n', fout);
         
+        free(name);
+        free(hostname);
+
         more = gtk_tree_model_iter_next(GTK_TREE_MODEL(store), &iter);
     }
         
@@ -204,6 +207,17 @@ dialog_response(GtkWidget *dialog,
         fclose(tmp_file);            
                 
         tab_complete_set_wordlist_file(tab_complete_name);
+        
+        /* load macro definitions */
+        len = strlen(home_dir) + MAX_LINE_LEN + 21 + 1;
+        char *macros_filename = malloc(sizeof(*macros_filename) * len);
+        snprintf(macros_filename, len, "%s/.mudc/worlds/%s/macros", home_dir, hostname);
+        tmp_file = fopen(tab_complete_name, "r");
+        if( !tmp_file )
+            tmp_file = fopen(tab_complete_name, "w");
+        fclose(tmp_file);            
+                
+        macros_load(macros_filename);
         
         /* disconnect from current telnet connection */
         telnet_close(MUDC.telnet);
@@ -326,12 +340,13 @@ worlds_configure_run()
     GtkTreeSelection *select = gtk_tree_view_get_selection(GTK_TREE_VIEW(tree));
     gtk_tree_selection_set_mode (select, GTK_SELECTION_SINGLE);
             
-    GtkWidget *button_sizer = gtk_hbox_new(TRUE, 5);
-    gtk_box_pack_start(GTK_BOX(sizer), button_sizer, FALSE, FALSE, 0);
-
     g_signal_connect(dialog, "response",
                      G_CALLBACK(dialog_response),
                      tree);
+
+    g_signal_connect_swapped(dialog, "delete-event",
+                             G_CALLBACK(gtk_widget_destroy),
+                             dialog);
     
     gtk_box_pack_start_defaults(GTK_BOX(content_area), sizer);
     gtk_widget_show_all(dialog);

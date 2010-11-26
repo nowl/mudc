@@ -6,12 +6,14 @@
 
 * TODO Config/Preferences
 ** TODO add color configurations
+** TODO have to close worlds window twice
 
 * TODO make echo telnet option work
 * TODO add local echo
 * TODO page up/down
 * TODO macros
 * TODO add default monospace font
+* TODO add paned/scrollbar widgets to worlds page
 
 * TODO lua scripting environment
 * TODO aliases

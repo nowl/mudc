@@ -37,8 +37,6 @@ main(int argc, char *argv[])
 
     gui_init(&argc, &argv);
 
-    macros_init();
-
     gtk_main();
 
     telnet_close(MUDC.telnet);

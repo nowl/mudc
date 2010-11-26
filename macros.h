@@ -3,4 +3,8 @@
 
 void macros_init();
 
+void macros_load(char *filename);
+
+void macros_configure_run();
+
 #endif  /* __MACROS_H__ */
