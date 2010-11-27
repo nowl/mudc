@@ -39,7 +39,7 @@ main(int argc, char *argv[])
 
     gtk_main();
 
-    telnet_close(MUDC.telnet);
+//    telnet_close(MUDC.telnet);
 
     tab_complete_save();
     

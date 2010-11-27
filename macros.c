@@ -26,6 +26,7 @@ enum columns {
 
 static char *macros_filename = NULL;
 static GtkWidget *tree = NULL;
+static GtkWidget *macros_dialog = NULL;
 static GtkListStore *store = NULL;
 static gulong signal_handler_press, signal_handler_release;
 
@@ -225,8 +226,9 @@ main_window_key_press(GtkWidget *widget,
 
                 if(keyval == keystate.key && keymods == keystate.mods)
                 {
-                    /* TODO: actually send this to the mud */
-                    printf("matched: %s\n", text);
+                    telnet_send(MUDC.telnet, text);
+                    free(text);
+                    return TRUE;
                 }
 
                 free(text);
@@ -526,13 +528,13 @@ dialog_response(GtkWidget *dialog,
 }
 
 static void
-dialog_destroy(GtkWidget *widget)
+macros_dialog_hide(GtkWidget *widget)
 {
     g_signal_handler_unblock(MUDC.widgets.main_window, signal_handler_press);
     g_signal_handler_unblock(MUDC.widgets.main_window, signal_handler_release);
     key_press_callback_state = STATE_FROM_MAIN_WINDOW;
 
-    gtk_widget_destroy(widget);
+    gtk_widget_hide(widget);
 }
 
 void
@@ -541,33 +543,61 @@ macros_configure_run()
     g_signal_handler_block(MUDC.widgets.main_window, signal_handler_press);
     g_signal_handler_block(MUDC.widgets.main_window, signal_handler_release);
 
-    GtkWidget *dialog = gtk_dialog_new_with_buttons("Macro Configuration",
-                                                    GTK_WINDOW(MUDC.widgets.main_window),
-                                                    GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT,
-                                                    "Add Macro", ADD_MACRO,
-                                                    "Remove Macro", REMOVE_MACRO,
-                                                    NULL);
-
-    gtk_window_set_default_size(GTK_WINDOW(dialog), 640, 480);
-
-    GtkWidget *content_area = gtk_dialog_get_content_area(GTK_DIALOG(dialog));
+    GtkWidget *dialog;
+    if(macros_dialog)
+    {
+        dialog = macros_dialog;
+    }
+    else
+    {
+        dialog = gtk_dialog_new_with_buttons("Macro Configuration",
+                                             GTK_WINDOW(MUDC.widgets.main_window),
+                                             GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT,
+                                             "Add Macro", ADD_MACRO,
+                                             "Remove Macro", REMOVE_MACRO,
+                                             NULL);
         
-    GtkWidget *sizer = gtk_vbox_new(FALSE, 5);
+        gtk_window_set_default_size(GTK_WINDOW(dialog), 640, 480);
 
-    gtk_box_pack_start_defaults(GTK_BOX(sizer), tree);
+        GtkWidget *content_area = gtk_dialog_get_content_area(GTK_DIALOG(dialog));
         
-    gtk_box_pack_start_defaults(GTK_BOX(content_area), sizer);
+        GtkWidget *sizer = gtk_vbox_new(FALSE, 5);
 
-    g_signal_connect(dialog, "response",
-                     G_CALLBACK(dialog_response),
-                     NULL);
-
-    g_signal_connect_swapped(dialog, "delete-event",
-                             G_CALLBACK(dialog_destroy),
-                             dialog);
-
-    gtk_widget_show_all(dialog);
+        store = gtk_list_store_new(N_COLUMNS,
+                                   G_TYPE_STRING, G_TYPE_STRING, 
+                                   G_TYPE_INT, G_TYPE_INT);
         
+        tree = gtk_tree_view_new_with_model(GTK_TREE_MODEL(store));
+
+        GtkCellRenderer *renderer = gtk_cell_renderer_text_new();
+        GtkTreeViewColumn *column = gtk_tree_view_column_new_with_attributes("Macro", renderer, "text", 0, NULL);
+        gtk_tree_view_append_column(GTK_TREE_VIEW(tree), column);
+        renderer = gtk_cell_renderer_text_new();
+        column = gtk_tree_view_column_new_with_attributes("Text to send to MUD", renderer, "text", 1, NULL);
+        gtk_tree_view_append_column(GTK_TREE_VIEW(tree), column);
+        
+        GtkTreeSelection *select = gtk_tree_view_get_selection(GTK_TREE_VIEW(tree));
+        gtk_tree_selection_set_mode(select, GTK_SELECTION_SINGLE);
+        
+        read_and_display_from_config(store);
+        
+        gtk_box_pack_start_defaults(GTK_BOX(sizer), tree);
+        
+        gtk_box_pack_start_defaults(GTK_BOX(content_area), sizer);
+        
+        g_signal_connect(dialog, "response",
+                         G_CALLBACK(dialog_response),
+                         NULL);
+        
+        g_signal_connect_swapped(dialog, "delete-event",
+                                 G_CALLBACK(macros_dialog_hide),
+                                 dialog);
+        
+        gtk_widget_show_all(dialog);
+        
+        macros_dialog = dialog;
+    }
+    
     gtk_dialog_run(GTK_DIALOG(dialog));
 }
 
@@ -586,22 +616,4 @@ macros_init()
 
     key_press_callback_state = STATE_FROM_MAIN_WINDOW;
     keystate.mods = 0;
-
-    store = gtk_list_store_new(N_COLUMNS,
-                               G_TYPE_STRING, G_TYPE_STRING, 
-                               G_TYPE_INT, G_TYPE_INT);
-    
-    tree = gtk_tree_view_new_with_model(GTK_TREE_MODEL(store));
-
-    GtkCellRenderer *renderer = gtk_cell_renderer_text_new();
-    GtkTreeViewColumn *column = gtk_tree_view_column_new_with_attributes("Macro", renderer, "text", 0, NULL);
-    gtk_tree_view_append_column(GTK_TREE_VIEW(tree), column);
-    renderer = gtk_cell_renderer_text_new();
-    column = gtk_tree_view_column_new_with_attributes("Text to send to MUD", renderer, "text", 1, NULL);
-    gtk_tree_view_append_column(GTK_TREE_VIEW(tree), column);
-
-    GtkTreeSelection *select = gtk_tree_view_get_selection(GTK_TREE_VIEW(tree));
-    gtk_tree_selection_set_mode(select, GTK_SELECTION_SINGLE);
-        
-    read_and_display_from_config(store);
 }
