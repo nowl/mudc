@@ -242,11 +242,6 @@ main_window_key_press(GtkWidget *widget,
 }
 
 void
-macros_delete(guint key, GdkModifierType mods)
-{
-}
-
-void
 macros_load(char *filename)
 {
     if(macros_filename)
@@ -455,7 +450,8 @@ macro_define_key_press(GtkWidget *widget,
     if(event->type == GDK_KEY_PRESS || event->type == GDK_KEY_RELEASE)
     {
         update_keystate((GdkEventKey *)event);
-        macro_key_response(widget, RESPONSE_KEY, NULL);
+        if(keystate.key != -1)
+            macro_key_response(widget, RESPONSE_KEY, NULL);
     }
 
     return FALSE;
