@@ -14,7 +14,8 @@
 struct mudc
 {
     struct telnetp *telnet;
-    
+    gboolean server_echo;
+        
     /* gtk stuff */
     struct
     {
@@ -37,6 +38,9 @@ struct mudc
         
         char   *text_to_find;
         size_t  text_to_find_c;
+
+        char   *server_echo_buffer;
+        size_t  server_echo_buffer_c;
     } buffers;
 
 };

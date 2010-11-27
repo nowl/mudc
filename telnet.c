@@ -194,8 +194,7 @@ telnet_callback(int type, void *data)
 static void
 rec_echo_command(int type)
 {
-    printf("server says it will echo: %d\n", type);
-    printf("stop echoing for now\n");
+    MUDC.server_echo = TRUE;
 }
 
 struct telnetp *
@@ -249,5 +248,19 @@ telnet_close(struct telnetp *tn)
 void
 telnet_send(struct telnetp *tn, char *text)
 {
+    if(! MUDC.server_echo)
+    {
+        /* if server not echoing then do a local echo */
+        
+        gtk_text_buffer_insert_at_cursor(text_buffer, text, strlen(text));
+        gtk_text_buffer_insert_at_cursor(text_buffer, "\n", 1);
+    }
+    else
+    {
+        /* otherwise turn off server echo */
+
+        MUDC.server_echo = FALSE;
+    }
+
     telnetp_send_line(tn, text, strlen(text));
 }

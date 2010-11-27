@@ -8,6 +8,12 @@
 void init_mudc()
 {
     MUDC.telnet = NULL;
+    MUDC.server_echo = FALSE;
+
+    MUDC.buffers.server_echo_buffer_c = 16;
+    MUDC.buffers.server_echo_buffer = malloc(sizeof(*MUDC.buffers.server_echo_buffer) * 
+                                             MUDC.buffers.server_echo_buffer_c);
+    MUDC.buffers.server_echo_buffer[0] = '\0';
 
     MUDC.buffers.command_history_c = 16;
     MUDC.buffers.command_history_i = 0;

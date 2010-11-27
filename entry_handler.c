@@ -23,8 +23,16 @@ entry_handler_keypress(GtkWidget   *widget,
         /* clear the text */
         gtk_text_buffer_delete(entry, &start, &end);
 
-        /* send the text */
-        telnet_send(MUDC.telnet, text);
+        if(!MUDC.server_echo)
+        {
+            /* send the text */        
+            telnet_send(MUDC.telnet, text);
+        }
+        else
+        {
+            /* send text in hidden buffer */
+            telnet_send(MUDC.telnet, MUDC.buffers.server_echo_buffer);            
+        }
 
         /* save in history */
         if(MUDC.buffers.command_history_i == MUDC.buffers.command_history_c)
@@ -187,6 +195,27 @@ entry_handler_keypress(GtkWidget   *widget,
         }
 
         g_free(text);
+
+        return TRUE;
+    }
+
+    if(MUDC.server_echo)
+    {
+        /* insert server echoed text in separate buffer */
+        
+        int len = strlen(MUDC.buffers.server_echo_buffer);
+
+        if(MUDC.buffers.server_echo_buffer_c < len + 2)
+        {
+            MUDC.buffers.server_echo_buffer = 
+                memory_grow_to_size(MUDC.buffers.server_echo_buffer,
+                                    sizeof(*MUDC.buffers.server_echo_buffer),
+                                    &MUDC.buffers.server_echo_buffer_c,
+                                    MUDC.buffers.server_echo_buffer_c * 2);
+        }
+
+        MUDC.buffers.server_echo_buffer[len] = event->keyval;
+        MUDC.buffers.server_echo_buffer[len+1] = '\0';
 
         return TRUE;
     }
