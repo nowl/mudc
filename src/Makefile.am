@@ -13,5 +13,5 @@ mudc_SOURCES = \
 	worlds.c \
 	macros.c
 
-mudc_CFLAGS = $(GTK_DEPS_CFLAGS)
-mudc_LDFLAGS = $(GTK_DEPS_LIBS) -ltelnetp
+mudc_CFLAGS = $(GTK_DEPS_CFLAGS) -I../../libtelnetp/include
+mudc_LDFLAGS = $(GTK_DEPS_LIBS) -L../../libtelnetp/src -ltelnetp

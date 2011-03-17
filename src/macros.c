@@ -512,12 +512,15 @@ dialog_response(GtkWidget *dialog,
         GtkTreeSelection *selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(tree));
         GList *selected_rows = gtk_tree_selection_get_selected_rows(selection, NULL);
         
-        GtkTreePath *path = selected_rows->data;
-        GtkTreeIter iter;        
-        gtk_tree_model_get_iter(GTK_TREE_MODEL(store), &iter, path);
-        gtk_list_store_remove(store, &iter);
-
-        write_to_config(store);
+        if(selected_rows)
+        {
+            GtkTreePath *path = selected_rows->data;
+            GtkTreeIter iter;        
+            gtk_tree_model_get_iter(GTK_TREE_MODEL(store), &iter, path);
+            gtk_list_store_remove(store, &iter);
+            
+            write_to_config(store);
+        }
         break;
     }
     }
